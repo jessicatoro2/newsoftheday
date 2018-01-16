@@ -10,7 +10,7 @@ var request = require('request');
 
 // Require all models
 var db = require("./models");
-
+console.log("this is the db:",db)
 var PORT = 3000;
 
 // Initialize Express
@@ -38,22 +38,22 @@ app.get("/scrape", function(req, res) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
     // Now, we grab every h2 within an article tag, and do the following:
-    $("article h2").each(function(i, element) {
+    $(".headline").each(function(i, element) {
+      // console.log("this our healine we found", element.children[0].data);
+    var label = element.children[0].data.replace(/[^a-z0-9\s-]/ig,'')
+        .trim()
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+          console.log("Clean title:", label);
       // Save an empty result object
-      var result = {};
+      var title = {headline: label};
 
-      // Add the text and href of every link, and save them as properties of the result object
-      result.title = $(this)
-        .children("a")
-        .text();
-      result.link = $(this)
-        .children("a")
-        .attr("href");
-
+      console.log("this is the model:",db.Article);
       // Create a new Article using the `result` object built from scraping
       db.Article
-        .create(result)
+        .create(title)
         .then(function(dbArticle) {
+          console.log("Article we saved", dbArticle)
           // If we were able to successfully scrape and save an Article, send a message to the client
           res.send("Scrape Complete");
         })
@@ -67,16 +67,16 @@ app.get("/scrape", function(req, res) {
 });
 
 // Route for getting all Articles from the db
-app.get("/articles", function(req, res) {
-  db.Article
-    .find({})
-    .then(function(dbArticle) {
-      res.json(dbArticle);
-    })
-    .catch(function(err) {
-      res.json(err);
-    });
-});
+// app.get("/articles", function(req, res) {
+//   db.Article
+//     .find({})
+//     .then(function(dbArticle) {
+//       res.json(dbArticle);
+//     })
+//     .catch(function(err) {
+//       res.json(err);
+//     });
+// });
 
 // // populate note
 // app.get("/articles/:id", function(req, res) {
